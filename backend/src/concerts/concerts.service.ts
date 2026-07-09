@@ -1,26 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateConcertDto } from './dto/create-concert.dto';
-import { UpdateConcertDto } from './dto/update-concert.dto';
+import { Concert } from './entities/concert.entity';
 
 @Injectable()
 export class ConcertsService {
-  create(createConcertDto: CreateConcertDto) {
-    return 'This action adds a new concert';
+  constructor(
+    @InjectRepository(Concert)
+    private readonly concertRepository: Repository<Concert>,
+  ) {}
+
+  async create(createConcertDto: CreateConcertDto) {
+    const concert = this.concertRepository.create(createConcertDto);
+    return await this.concertRepository.save(concert);
   }
 
-  findAll() {
-    return `This action returns all concerts`;
+  async findAll() {
+    return await this.concertRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} concert`;
-  }
+  async remove(id: string) {
+    const concert = await this.concertRepository.findOne({ where: { id } });
+    if (!concert) {
+      throw new NotFoundException(`Concert with ID ${id} not found`);
+    }
 
-  update(id: number, updateConcertDto: UpdateConcertDto) {
-    return `This action updates a #${id} concert`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} concert`;
+    await this.concertRepository.remove(concert);
+    return { message: `Concert ${id} successfully deleted` };
   }
 }
