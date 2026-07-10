@@ -8,7 +8,7 @@ ORM: TypeORM
 
 ## Prerequisites
 - Docker & Docker Compose
-- Node.js (v18+)
+- Node.js (v20.9.0+)
 
 ## Setup Instructions
 1. Run `docker-compose up -d` to start the database.
