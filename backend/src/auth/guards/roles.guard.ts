@@ -4,9 +4,9 @@ import {
   type CanActivate,
   type ExecutionContext,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from 'src/common/decorators/roles.decorator';
-import type { UserRole } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/users/entities/user.entity';
 
 interface RequestWithUser {
   user?: {
