@@ -3,6 +3,7 @@
 import ConcertCard from '@/components/ui/ConcertCard'
 import StatCard from '@/components/ui/StatCard'
 import { concertsApi, type Concert } from '@/lib/api/concerts'
+import { useRole } from '@/lib/hooks/useRole'
 import {
   createConcertSchema,
   type CreateConcertFormData,
@@ -21,6 +22,8 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 
 export default function AdminHomePage() {
+  const { isAdmin } = useRole();
+  
   const [activeTab, setActiveTab] = useState<'overview' | 'create'>('overview')
   const [concerts, setConcerts] = useState<Concert[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -86,7 +89,7 @@ export default function AdminHomePage() {
   return (
     <div className="space-y-8">
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      {isAdmin && (<div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <StatCard
           icon={<User className="mb-2 h-8 w-8" />}
           label="Total of seats"
@@ -105,7 +108,7 @@ export default function AdminHomePage() {
           value="12"
           bgColorClass="bg-[#F96464]"
         />
-      </div>
+      </div>)}
 
       {/* TABS */}
       <div className="flex gap-6 border-b border-gray-200 text-lg">
@@ -119,7 +122,7 @@ export default function AdminHomePage() {
         >
           Overview
         </button>
-        <button
+        {isAdmin && (<button
           onClick={() => setActiveTab('create')}
           className={`pb-3 ${
             activeTab === 'create'
@@ -128,7 +131,7 @@ export default function AdminHomePage() {
           }`}
         >
           Create
-        </button>
+        </button>)}
       </div>
 
       {/* TAB CONTENT RENDERER */}
@@ -151,7 +154,7 @@ export default function AdminHomePage() {
                 name={concert.name}
                 description={concert.description}
                 totalSeats={concert.totalSeats}
-                onDelete={() => console.log(`Trigger delete for ${concert.id}`)}
+                onDelete={isAdmin ? () => console.log(`Trigger delete for ${concert.id}`): undefined}
               />
             ))
           )}
