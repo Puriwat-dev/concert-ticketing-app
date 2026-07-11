@@ -3,14 +3,7 @@ import PasswordField from '@/components/ui/PasswordField'
 import { User } from 'lucide-react'
 import Link from 'next/link'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ role?: string }>
-}) {
-  const resolvedSearchParams = await searchParams
-  const isAdmin = resolvedSearchParams.role === 'admin'
-  const roleText = isAdmin ? 'Administrator' : 'User'
+export default async function SignUpPage() {
   return (
     <div className="flex min-h-screen bg-white">
       {/* Left Side */}
@@ -37,9 +30,17 @@ export default async function LoginPage({
       {/* Right Side */}
       <div className="flex w-full items-center justify-center p-8 md:w-1/2">
         <div className="w-full max-w-md">
-          <h2 className="mb-10 text-center text-3xl font-bold">Login</h2>
+          <h2 className="mb-10 text-center text-3xl font-bold">Sign Up</h2>
 
           <form className="space-y-6">
+            {/* Full Name */}
+            <InputField
+              label="Fullname"
+              icon={<User className="h-5 w-5" />}
+              type="text"
+              placeholder="Enter your Full Name"
+            />
+  
             {/* Email */}
             <InputField
               label="Email"
@@ -51,12 +52,15 @@ export default async function LoginPage({
             {/* Password */}
             <PasswordField />
 
-            {/* Login Button */}
+            {/* Password */}
+            <PasswordField placeholder='Re-enter your Password' label='Confirm Password'/>
+
+            {/* Sign Up Button */}
             <button
               type="submit"
               className="mt-5 w-full bg-[#1692EC] py-3 text-white"
             >
-              Login as {roleText}
+              Sign Up
             </button>
 
             {/* Account */}
