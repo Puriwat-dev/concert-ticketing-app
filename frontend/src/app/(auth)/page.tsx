@@ -28,7 +28,7 @@ export default function RoleSelectionPage() {
             title="User"
             description="Lorem ipsum dolor sit amet consectetur. Elit purus nam gravida porttitor nibh urna sit ornare a. Proin dolor morbi id ornare aenean non"
             icon={<SquareUser className="h-16 w-16" />}
-            href="/login?role=user"
+            href="/login?role=USER"
             buttonText="Enter Workspace"
             variant="light"
           />
@@ -37,7 +37,7 @@ export default function RoleSelectionPage() {
             title="Administrator"
             description="Lorem ipsum dolor sit amet consectetur. Elit purus nam gravida porttitor nibh urna sit ornare a. Proin dolor morbi id ornare aenean non"
             icon={<UserCog className="h-16 w-16" />}
-            href="/login?role=admin"
+            href="/login?role=ADMIN"
             buttonText="Enter Portal"
             variant="dark"
           />

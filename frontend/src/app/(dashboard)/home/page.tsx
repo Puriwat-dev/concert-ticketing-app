@@ -1,6 +1,7 @@
 'use client'
 
 import ConcertCard from '@/components/ui/ConcertCard'
+import DeleteConfirmModal from '@/components/ui/DeleteConfirmModal'
 import StatCard from '@/components/ui/StatCard'
 import { concertsApi, type Concert } from '@/lib/api/concerts'
 import { useRole } from '@/lib/hooks/useRole'
@@ -22,11 +23,13 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 
 export default function AdminHomePage() {
-  const { isAdmin } = useRole();
-  
+  const { isAdmin } = useRole()
+
   const [activeTab, setActiveTab] = useState<'overview' | 'create'>('overview')
   const [concerts, setConcerts] = useState<Concert[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [concertToDelete, setConcertToDelete] = useState<Concert | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const {
     register,
@@ -36,6 +39,8 @@ export default function AdminHomePage() {
   } = useForm<CreateConcertFormData>({
     resolver: zodResolver(createConcertSchema),
     defaultValues: {
+      name: '',
+      description: '',
       totalSeats: 500,
     },
   })
@@ -86,29 +91,52 @@ export default function AdminHomePage() {
     }
   }
 
+  const handleDeleteConfirm = async () => {
+    if (!concertToDelete) return
+
+    setIsDeleting(true)
+    try {
+      await concertsApi.delete(concertToDelete.id)
+      toast.success('Concert deleted successfully')
+
+      fetchConcerts()
+      setConcertToDelete(null)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to delete concert')
+      }
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="space-y-8">
       {/* STATS CARDS */}
-      {isAdmin && (<div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <StatCard
-          icon={<User className="mb-2 h-8 w-8" />}
-          label="Total of seats"
-          value="500"
-          bgColorClass="bg-[#0070A4]"
-        />
-        <StatCard
-          icon={<Award className="mb-2 h-8 w-8" />}
-          label="Reserve"
-          value="120"
-          bgColorClass="bg-[#00A58B]"
-        />
-        <StatCard
-          icon={<XCircle className="mb-2 h-8 w-8" />}
-          label="Cancel"
-          value="12"
-          bgColorClass="bg-[#F96464]"
-        />
-      </div>)}
+      {isAdmin && (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <StatCard
+            icon={<User className="mb-2 h-8 w-8" />}
+            label="Total of seats"
+            value="500"
+            bgColorClass="bg-[#0070A4]"
+          />
+          <StatCard
+            icon={<Award className="mb-2 h-8 w-8" />}
+            label="Reserve"
+            value="120"
+            bgColorClass="bg-[#00A58B]"
+          />
+          <StatCard
+            icon={<XCircle className="mb-2 h-8 w-8" />}
+            label="Cancel"
+            value="12"
+            bgColorClass="bg-[#F96464]"
+          />
+        </div>
+      )}
 
       {/* TABS */}
       <div className="flex gap-6 border-b border-gray-200 text-lg">
@@ -122,16 +150,18 @@ export default function AdminHomePage() {
         >
           Overview
         </button>
-        {isAdmin && (<button
-          onClick={() => setActiveTab('create')}
-          className={`pb-3 ${
-            activeTab === 'create'
-              ? 'border-b-2 border-[#1692EC] font-medium text-[#1692EC]'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
-          Create
-        </button>)}
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('create')}
+            className={`pb-3 ${
+              activeTab === 'create'
+                ? 'border-b-2 border-[#1692EC] font-medium text-[#1692EC]'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            Create
+          </button>
+        )}
       </div>
 
       {/* TAB CONTENT RENDERER */}
@@ -154,7 +184,9 @@ export default function AdminHomePage() {
                 name={concert.name}
                 description={concert.description}
                 totalSeats={concert.totalSeats}
-                onDelete={isAdmin ? () => console.log(`Trigger delete for ${concert.id}`): undefined}
+                onDelete={
+                  isAdmin ? () => setConcertToDelete(concert) : undefined
+                }
               />
             ))
           )}
@@ -197,7 +229,13 @@ export default function AdminHomePage() {
                         ? 'border-red-500 focus:border-red-500'
                         : 'border-gray-300 focus:border-blue-500'
                     }`}
-                    {...register('totalSeats')}
+                    {...register('totalSeats', {
+                      setValueAs: (value) => {
+                        if (value === '') return undefined
+                        const parsed = Number(value)
+                        return isNaN(parsed) ? undefined : parsed
+                      },
+                    })}
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                     <UserIcon className="h-5 w-5" />
@@ -246,6 +284,14 @@ export default function AdminHomePage() {
             </div>
           </form>
         </div>
+      )}
+      {concertToDelete && (
+        <DeleteConfirmModal
+          concertName={concertToDelete.name}
+          isDeleting={isDeleting}
+          onCancel={() => setConcertToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+        />
       )}
     </div>
   )

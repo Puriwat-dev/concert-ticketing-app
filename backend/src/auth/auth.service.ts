@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/entities/user.entity';
+import { User, type UserRole } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { RegisterDto, type LoginDto } from './dto/auth.dto';
 
@@ -41,7 +41,7 @@ export class AuthService {
     return { message: 'User successfully registered' };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, requestedRole: UserRole) {
     const { email, password } = loginDto;
 
     const user = await this.userRepository.findOne({ where: { email } });
@@ -52,6 +52,12 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.role !== requestedRole) {
+      throw new UnauthorizedException(
+        `Access denied. You do not have ${requestedRole} role.`,
+      );
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };

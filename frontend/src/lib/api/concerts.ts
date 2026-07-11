@@ -39,4 +39,12 @@ export const concertsApi = {
       body: data,
     });
   },
+
+  delete(id: string) {
+    const token = getAuthToken();
+    return fetcher(`/concerts/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
 };

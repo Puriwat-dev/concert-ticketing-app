@@ -18,8 +18,8 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const role = searchParams.get('role')
-  const isAdmin = role === 'admin'
+  const role = searchParams.get("role") || "user";
+  const isAdmin = role === 'ADMIN'
   const roleText = isAdmin ? 'Administrator' : 'User'
 
   const {
@@ -35,7 +35,7 @@ function LoginForm() {
       const response = await authApi.login({
         email: data.email,
         password: data.password,
-      })
+      }, role)
 
       Cookies.set('accessToken', response.accessToken, {
         expires: 1,

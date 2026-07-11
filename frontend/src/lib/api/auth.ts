@@ -18,8 +18,8 @@ interface RegisterResponse {
 }
 
 export const authApi = {
-  login(data: LoginPayload) {
-    return fetcher<LoginResponse>('/auth/login', {
+  login(data: LoginPayload, role: string) {
+    return fetcher<LoginResponse>(`/auth/login?role=${role}`, {
       method: 'POST',
       body: data,
     })

@@ -5,18 +5,19 @@ interface FetchOptions extends Omit<RequestInit, 'body'> {
 }
 
 export async function fetcher<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const { body, headers } = options;
+  const { body, headers, method, ...rest } = options;
 
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
   };
 
   const config: RequestInit = {
-    method: body ? 'POST' : 'GET',
+    method: method || (body ? 'POST' : 'GET'),
     headers: {
       ...defaultHeaders,
       ...headers,
     },
+    ...rest,
   };
 
   if (body) {
