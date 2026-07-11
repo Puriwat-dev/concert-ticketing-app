@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Concert } from '../concerts/entities/concert.entity';
 import { CreateReservationDto } from './dto/create-reservation.dto';
-import { Reservation } from './entities/reservation.entity';
+import { Reservation, ReservationAction } from './entities/reservation.entity';
 
 @Injectable()
 export class ReservationsService {
@@ -27,38 +27,50 @@ export class ReservationsService {
         lock: { mode: 'pessimistic_write' },
       });
 
-      if (!concert) {
-        throw new NotFoundException('Concert not found');
-      }
+      if (!concert) throw new NotFoundException('Concert not found');
 
       const existingReservation = await manager.findOne(Reservation, {
         where: { user: { id: userId }, concert: { id: concertId } },
       });
 
       if (existingReservation) {
-        throw new ConflictException(
-          'You have already reserved a seat for this concert',
-        );
+        if (existingReservation.action === ReservationAction.RESERVE) {
+          throw new ConflictException(
+            'You have already reserved a seat for this concert',
+          );
+        }
       }
 
-      const currentReservations = await manager.count(Reservation, {
-        where: { concert: { id: concertId } },
+      const currentActiveSeats = await manager.count(Reservation, {
+        where: {
+          concert: { id: concertId },
+          action: ReservationAction.RESERVE,
+        },
       });
 
-      if (currentReservations >= concert.totalSeats) {
+      if (currentActiveSeats >= concert.totalSeats) {
         throw new BadRequestException('This concert is fully booked');
       }
 
-      const reservation = manager.create(Reservation, {
-        user: { id: userId },
-        concert: { id: concertId },
-      });
-
-      await manager.save(reservation);
-      return {
-        message: 'Seat successfully reserved',
-        reservationId: reservation.id,
-      };
+      if (existingReservation) {
+        existingReservation.action = ReservationAction.RESERVE;
+        await manager.save(existingReservation);
+        return {
+          message: 'Seat successfully re-reserved',
+          reservationId: existingReservation.id,
+        };
+      } else {
+        const newReservation = manager.create(Reservation, {
+          user: { id: userId },
+          concert: { id: concertId },
+          action: ReservationAction.RESERVE,
+        });
+        await manager.save(newReservation);
+        return {
+          message: 'Seat successfully reserved',
+          reservationId: newReservation.id,
+        };
+      }
     });
   }
 
@@ -67,11 +79,15 @@ export class ReservationsService {
       where: { id: reservationId, user: { id: userId } },
     });
 
-    if (!reservation) {
-      throw new NotFoundException('Reservation not found or you do not own it');
+    if (!reservation || reservation.action === ReservationAction.CANCEL) {
+      throw new NotFoundException(
+        'Active reservation not found or you do not own it',
+      );
     }
 
-    await this.reservationRepository.remove(reservation);
+    reservation.action = ReservationAction.CANCEL;
+    await this.reservationRepository.save(reservation);
+
     return { message: 'Reservation successfully canceled' };
   }
 
