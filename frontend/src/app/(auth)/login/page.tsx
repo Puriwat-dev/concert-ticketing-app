@@ -6,6 +6,7 @@ import PasswordField from '@/components/ui/PasswordField'
 import { authApi } from '@/lib/api/auth'
 import { LoginFormData, loginSchema } from '@/lib/validations/auth'
 import { zodResolver } from '@hookform/resolvers/zod'
+import Cookies from 'js-cookie'
 import { User } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -36,7 +37,11 @@ function LoginForm() {
         password: data.password,
       })
 
-      localStorage.setItem('accessToken', response.accessToken)
+      Cookies.set('accessToken', response.accessToken, {
+        expires: 1,
+        path: '/',
+        sameSite: 'Lax',
+      })
 
       toast.success('Logged in successfully!')
 
