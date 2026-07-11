@@ -4,6 +4,7 @@ import LogoutButton from '@/components/ui/LogoutButton'
 import { useRole } from '@/lib/hooks/useRole'
 import { History, Home, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,16 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const { isAdmin } = useRole();
+  const pathname = usePathname();
+
+  const getLinkClass = (path: string) => {
+    const isActive = pathname === path;
+    return `flex items-center gap-3 rounded-md px-4 py-3 ${
+      isActive
+        ? "bg-[#F0F5F9] font-medium text-black"
+        : "text-black hover:bg-gray-50"
+    }`;
+  };
   
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -22,7 +33,7 @@ export default function DashboardLayout({
           {/* Active Link */}
           <Link
             href="/home"
-            className="flex items-center gap-3 rounded-md bg-[#F0F5F9] px-4 py-3 font-medium"
+            className={getLinkClass("/home")}
           >
             <Home className="h-5 w-5" />
             Home
@@ -31,7 +42,7 @@ export default function DashboardLayout({
           {/* Inactive Links */}
           <Link
             href="/history"
-            className="flex items-center gap-3 rounded-md px-4 py-3 hover:bg-gray-50"
+            className={getLinkClass("/history")}
           >
             <History className="h-5 w-5" />
             History

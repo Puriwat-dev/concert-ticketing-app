@@ -4,6 +4,7 @@ import ConcertCard from '@/components/ui/ConcertCard'
 import DeleteConfirmModal from '@/components/ui/DeleteConfirmModal'
 import StatCard from '@/components/ui/StatCard'
 import { concertsApi, type Concert } from '@/lib/api/concerts'
+import { reservationsApi } from '@/lib/api/reservations'
 import { useRole } from '@/lib/hooks/useRole'
 import {
   createConcertSchema,
@@ -18,15 +19,17 @@ import {
   User as UserIcon,
   XCircle,
 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 
-export default function AdminHomePage() {
+export default function HomePage() {
   const { isAdmin } = useRole()
 
   const [activeTab, setActiveTab] = useState<'overview' | 'create'>('overview')
   const [concerts, setConcerts] = useState<Concert[]>([])
+  const [reserveCount, setReserveCount] = useState(0)
+  const [cancelCount, setCancelCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [concertToDelete, setConcertToDelete] = useState<Concert | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -44,6 +47,52 @@ export default function AdminHomePage() {
       totalSeats: 500,
     },
   })
+
+  const totalConcertSeats = useMemo(() => {
+    return concerts.reduce((sum, concert) => sum + concert.totalSeats, 0);
+  }, [concerts]);
+
+  const fetchDashboardData = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const concertsData = await concertsApi.getAll()
+      setConcerts(concertsData)
+
+      if (isAdmin) {
+        const reservationsData = await reservationsApi.getAllReservations()
+
+        const reserves = reservationsData.filter(
+          (r) => r.action.toUpperCase() === 'RESERVE',
+        ).length
+        const cancels = reservationsData.filter(
+          (r) => r.action.toUpperCase() === 'CANCEL',
+        ).length
+
+        setReserveCount(reserves)
+        setCancelCount(cancels)
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error && !error.message.includes('403')) {
+        toast.error(error.message)
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isAdmin])
+
+  useEffect(() => {
+    let isMounted = true
+    const loadData = async () => {
+      await Promise.resolve()
+      if (isMounted) {
+        fetchDashboardData()
+      }
+    }
+    loadData()
+    return () => {
+      isMounted = false
+    }
+  }, [fetchDashboardData])
 
   const fetchConcerts = useCallback(async () => {
     setIsLoading(true)
@@ -120,19 +169,19 @@ export default function AdminHomePage() {
           <StatCard
             icon={<User className="mb-2 h-8 w-8" />}
             label="Total of seats"
-            value="500"
+            value={totalConcertSeats}
             bgColorClass="bg-[#0070A4]"
           />
           <StatCard
             icon={<Award className="mb-2 h-8 w-8" />}
             label="Reserve"
-            value="120"
+            value={reserveCount}
             bgColorClass="bg-[#00A58B]"
           />
           <StatCard
             icon={<XCircle className="mb-2 h-8 w-8" />}
             label="Cancel"
-            value="12"
+            value={cancelCount}
             bgColorClass="bg-[#F96464]"
           />
         </div>
