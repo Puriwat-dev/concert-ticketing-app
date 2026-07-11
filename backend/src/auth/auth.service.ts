@@ -19,7 +19,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password } = registerDto;
+    const { fullName, email, password } = registerDto;
 
     const existingUser = await this.userRepository.findOne({
       where: { email },
@@ -32,6 +32,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, salt);
 
     const user = this.userRepository.create({
+      fullName,
       email,
       passwordHash,
     });

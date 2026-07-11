@@ -2,15 +2,19 @@
 
 import { Eye, EyeOff, LockKeyhole } from 'lucide-react'
 import { useState } from 'react'
-interface PasswordFieldProps {
+interface PasswordFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   placeholder?: string
   label?: string
+  error?: string
 }
 
 export default function PasswordField({
   placeholder = 'Enter your Password',
   label = 'Password',
-}: PasswordFieldProps) {
+  error,
+  ref,
+  ...rest
+}: PasswordFieldProps & { ref?: React.Ref<HTMLInputElement> }) {
   const [showPassword, setShowPassword] = useState(false)
 
   const togglePasswordVisibility = () => {
@@ -26,7 +30,7 @@ export default function PasswordField({
         </div>
 
         <div
-          className="absolute inset-y-0 right-0 flex items-center pr-3"
+          className="absolute cursor-pointer inset-y-0 right-0 flex items-center pr-3"
           onClick={togglePasswordVisibility}
         >
           {showPassword ? (
@@ -40,8 +44,11 @@ export default function PasswordField({
           type={showPassword ? 'text' : 'password'}
           className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-3 text-sm"
           placeholder={placeholder}
+          ref={ref}
+          {...rest}
         />
       </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
     </div>
   )
 }
