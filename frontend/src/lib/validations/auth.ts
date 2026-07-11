@@ -19,4 +19,11 @@ export const signUpSchema = z
     path: ['confirmPassword'],
   })
 
+export const loginSchema = z.object({
+  email: z.email({ error: 'Please enter a valid email address' }),
+  password: z.string().min(6, 'Password must be at least 6 characters long'),
+})
+
+export type LoginFormData = z.infer<typeof loginSchema>
+
 export type SignUpFormData = z.infer<typeof signUpSchema>

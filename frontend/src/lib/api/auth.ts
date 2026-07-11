@@ -1,42 +1,34 @@
+import { fetcher } from './fetcher'
+
 export interface LoginPayload {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
 export interface RegisterPayload extends LoginPayload {
-  fullName: string;
+  fullName: string
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+interface LoginResponse {
+  accessToken: string
+}
+
+interface RegisterResponse {
+  message: string
+}
 
 export const authApi = {
-  async login(data: LoginPayload) {
-    const res = await fetch(`${API_URL}/auth/login`, {
+  login(data: LoginPayload) {
+    return fetcher<LoginResponse>('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json(); 
-      throw new Error(errorData.message || 'Failed to login');
-    }
-
-    return res.json();
+      body: data,
+    })
   },
 
-  async register(data: RegisterPayload) {
-    const res = await fetch(`${API_URL}/auth/register`, {
+  register(data: RegisterPayload) {
+    return fetcher<RegisterResponse>('/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.message || 'Registration failed');
-    }
-
-    return res.json();
+      body: data,
+    })
   },
-};
+}

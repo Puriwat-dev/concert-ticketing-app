@@ -51,7 +51,7 @@ export default function SignUpPage() {
         <div className="w-full max-w-md">
           <h2 className="mb-10 text-center text-3xl font-bold">Sign Up</h2>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
             {/* Full Name */}
             <InputField
               label="Fullname"
