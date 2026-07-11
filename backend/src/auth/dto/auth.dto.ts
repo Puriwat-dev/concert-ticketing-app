@@ -24,6 +24,5 @@ export class RegisterDto extends LoginDto {
 
 export class LoginQueryDto {
   @IsOptional()
-  @IsEnum(UserRole, { message: 'Role parameter must be either ADMIN or USER' })
   role!: UserRole;
 }

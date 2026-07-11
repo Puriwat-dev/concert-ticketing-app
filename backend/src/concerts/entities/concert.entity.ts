@@ -13,4 +13,7 @@ export class Concert {
 
   @Column('int')
   totalSeats!: number;
+
+  @Column('int', { default: 0 })
+  availableSeats!: number;
 }

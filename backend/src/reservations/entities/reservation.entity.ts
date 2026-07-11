@@ -15,7 +15,6 @@ export enum ReservationAction {
   CANCEL = 'CANCEL',
 }
 @Entity('reservations')
-@Unique(['user', 'concert'])
 export class Reservation {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

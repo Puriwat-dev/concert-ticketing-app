@@ -12,7 +12,10 @@ export class ConcertsService {
   ) {}
 
   async create(createConcertDto: CreateConcertDto) {
-    const concert = this.concertRepository.create(createConcertDto);
+    const concert = this.concertRepository.create({
+      ...createConcertDto,
+      availableSeats: createConcertDto.totalSeats,
+    });
     return await this.concertRepository.save(concert);
   }
 

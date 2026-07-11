@@ -29,73 +29,80 @@ export class ReservationsService {
 
       if (!concert) throw new NotFoundException('Concert not found');
 
-      const existingReservation = await manager.findOne(Reservation, {
+      const latestRecord = await manager.findOne(Reservation, {
         where: { user: { id: userId }, concert: { id: concertId } },
+        order: { createdAt: 'DESC' },
       });
 
-      if (existingReservation) {
-        if (existingReservation.action === ReservationAction.RESERVE) {
-          throw new ConflictException(
-            'You have already reserved a seat for this concert',
-          );
-        }
+      if (latestRecord && latestRecord.action === ReservationAction.RESERVE) {
+        throw new ConflictException(
+          'You already hold an active reservation for this concert',
+        );
       }
 
-      const currentActiveSeats = await manager.count(Reservation, {
-        where: {
-          concert: { id: concertId },
-          action: ReservationAction.RESERVE,
-        },
-      });
-
-      if (currentActiveSeats >= concert.totalSeats) {
+      if (concert.availableSeats <= 0) {
         throw new BadRequestException('This concert is fully booked');
       }
 
-      if (existingReservation) {
-        existingReservation.action = ReservationAction.RESERVE;
-        await manager.save(existingReservation);
-        return {
-          message: 'Seat successfully re-reserved',
-          reservationId: existingReservation.id,
-        };
-      } else {
-        const newReservation = manager.create(Reservation, {
-          user: { id: userId },
-          concert: { id: concertId },
-          action: ReservationAction.RESERVE,
-        });
-        await manager.save(newReservation);
-        return {
-          message: 'Seat successfully reserved',
-          reservationId: newReservation.id,
-        };
-      }
+      concert.availableSeats -= 1;
+      await manager.save(concert);
+
+      const reservation = manager.create(Reservation, {
+        user: { id: userId },
+        concert: { id: concertId },
+        action: ReservationAction.RESERVE,
+      });
+      await manager.save(reservation);
+
+      return {
+        message: 'Seat successfully reserved',
+        reservationId: reservation.id,
+      };
     });
   }
 
-  async cancel(userId: string, reservationId: string) {
-    const reservation = await this.reservationRepository.findOne({
-      where: { id: reservationId, user: { id: userId } },
+  async cancel(userId: string, concertId: string) {
+    return await this.dataSource.transaction(async (manager) => {
+      const concert = await manager.findOne(Concert, {
+        where: { id: concertId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!concert) throw new NotFoundException('Concert not found');
+
+      const latestRecord = await manager.findOne(Reservation, {
+        where: { user: { id: userId }, concert: { id: concertId } },
+        order: { createdAt: 'DESC' },
+      });
+
+      if (!latestRecord || latestRecord.action === ReservationAction.CANCEL) {
+        throw new NotFoundException(
+          'You do not have an active reservation to cancel',
+        );
+      }
+
+      concert.availableSeats += 1;
+      await manager.save(concert);
+
+      const cancelRecord = manager.create(Reservation, {
+        user: { id: userId },
+        concert: { id: concertId },
+        action: ReservationAction.CANCEL,
+      });
+      await manager.save(cancelRecord);
+
+      return {
+        message: 'Reservation successfully canceled',
+        cancelRecordId: cancelRecord.id,
+      };
     });
-
-    if (!reservation || reservation.action === ReservationAction.CANCEL) {
-      throw new NotFoundException(
-        'Active reservation not found or you do not own it',
-      );
-    }
-
-    reservation.action = ReservationAction.CANCEL;
-    await this.reservationRepository.save(reservation);
-
-    return { message: 'Reservation successfully canceled' };
   }
 
   async getUserHistory(userId: string) {
     return await this.reservationRepository.find({
       where: { user: { id: userId } },
-      relations: { concert: true },
-      order: { createdAt: 'DESC' },
+      relations: { concert: true, user: true },
+      order: { updatedAt: 'DESC' },
     });
   }
 

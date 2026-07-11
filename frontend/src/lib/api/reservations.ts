@@ -17,6 +17,7 @@ export interface Reservation {
     fullName: string;
   };
   concert: {
+    id: string;
     name: string;
   };
 }
@@ -34,6 +35,22 @@ export const reservationsApi = {
     const token = getAuthToken();
     return fetcher<Reservation[]>('/reservations/audit', {
       method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  reserve(concertId: string) {
+    const token = getAuthToken();
+    return fetcher('/reservations', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: { concertId },
+    });
+  },
+  cancel(concertId: string) {
+    const token = getAuthToken();
+    return fetcher(`/reservations/${concertId}`, {
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
   },

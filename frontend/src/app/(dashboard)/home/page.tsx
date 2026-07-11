@@ -4,7 +4,7 @@ import ConcertCard from '@/components/ui/ConcertCard'
 import DeleteConfirmModal from '@/components/ui/DeleteConfirmModal'
 import StatCard from '@/components/ui/StatCard'
 import { concertsApi, type Concert } from '@/lib/api/concerts'
-import { reservationsApi } from '@/lib/api/reservations'
+import { reservationsApi, type Reservation } from '@/lib/api/reservations'
 import { useRole } from '@/lib/hooks/useRole'
 import {
   createConcertSchema,
@@ -29,6 +29,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'create'>('overview')
   const [concerts, setConcerts] = useState<Concert[]>([])
   const [reserveCount, setReserveCount] = useState(0)
+  const [userReservations, setUserReservations] = useState<Reservation[]>([])
   const [cancelCount, setCancelCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [concertToDelete, setConcertToDelete] = useState<Concert | null>(null)
@@ -49,8 +50,8 @@ export default function HomePage() {
   })
 
   const totalConcertSeats = useMemo(() => {
-    return concerts.reduce((sum, concert) => sum + concert.totalSeats, 0);
-  }, [concerts]);
+    return concerts.reduce((sum, concert) => sum + concert.totalSeats, 0)
+  }, [concerts])
 
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true)
@@ -70,6 +71,9 @@ export default function HomePage() {
 
         setReserveCount(reserves)
         setCancelCount(cancels)
+      } else {
+        const myHistory = await reservationsApi.getUserHistory()
+        setUserReservations(myHistory)
       }
     } catch (error: unknown) {
       if (error instanceof Error && !error.message.includes('403')) {
@@ -79,6 +83,26 @@ export default function HomePage() {
       setIsLoading(false)
     }
   }, [isAdmin])
+
+  const handleReserve = async (concertId: string) => {
+    try {
+      await reservationsApi.reserve(concertId)
+      toast.success('Successfully reserved!')
+      fetchDashboardData()
+    } catch (error: unknown) {
+      toast.error('Failed to reserve concert.')
+    }
+  }
+
+  const handleCancelReservation = async (concertId: string) => {
+    try {
+      await reservationsApi.cancel(concertId)
+      toast.success('Reservation cancelled.')
+      fetchDashboardData()
+    } catch (error: unknown) {
+      toast.error('Failed to cancel reservation.')
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -213,7 +237,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* TAB CONTENT RENDERER */}
+      {/* TAB CONTENT */}
       {activeTab === 'overview' ? (
         /* OVERVIEW TAB CONTENT */
         <div className="flex flex-col gap-6">
@@ -226,18 +250,28 @@ export default function HomePage() {
               No concerts found. Click &quot;Create&quot; to add one!
             </div>
           ) : (
-            /* 4. Map over the real data */
-            concerts.map((concert) => (
-              <ConcertCard
-                key={concert.id}
-                name={concert.name}
-                description={concert.description}
-                totalSeats={concert.totalSeats}
-                onDelete={
-                  isAdmin ? () => setConcertToDelete(concert) : undefined
-                }
-              />
-            ))
+            concerts.map((concert) => {
+              const latestRecord = [...userReservations]
+                .find((r) => r.concert?.id === concert.id);
+
+              const isCurrentlyReserved = latestRecord?.action.toUpperCase() === 'RESERVE';
+
+              return (
+                <ConcertCard
+                  key={concert.id}
+                  name={concert.name}
+                  description={concert.description}
+                  totalSeats={concert.totalSeats}
+                  isAdmin={isAdmin}
+                  isReserved={isCurrentlyReserved}
+                  onReserve={() => handleReserve(concert.id)}
+                  onCancelReserve={() => handleCancelReservation(concert.id)}
+                  onDelete={
+                    isAdmin ? () => setConcertToDelete(concert) : undefined
+                  }
+                />
+              )
+            })
           )}
         </div>
       ) : (

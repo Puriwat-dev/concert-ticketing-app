@@ -4,14 +4,22 @@ interface ConcertCardProps {
   name: string
   description: string
   totalSeats: number
+  isAdmin?: boolean
+  isReserved?: boolean
   onDelete?: () => void
+  onReserve?: () => void
+  onCancelReserve?: () => void
 }
 
 export default function ConcertCard({
   name,
   description,
   totalSeats,
+  isAdmin = false,
+  isReserved = false,
   onDelete,
+  onReserve,
+  onCancelReserve,
 }: ConcertCardProps) {
   return (
     <div className="flex flex-col rounded-md border border-gray-200 bg-white p-6 shadow-sm">
@@ -31,13 +39,31 @@ export default function ConcertCard({
           <span>{totalSeats}</span>
         </div>
 
-        {onDelete && (
+        {isAdmin ? (
+          // ADMIN: Delete Button
+          onDelete && (
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-2 rounded-md bg-[#F96464] px-6 py-2.5 text-white hover:bg-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          )
+        ) : // USER: Reserve or Cancel Button
+        isReserved ? (
           <button
-            onClick={onDelete}
-            className="flex items-center gap-2 rounded-md bg-[#F96464] px-6 py-2.5 text-white transition-colors hover:bg-red-600"
+            onClick={onCancelReserve}
+            className="rounded-md bg-[#F96464] px-8 py-2.5 font-medium text-white hover:bg-red-600"
           >
-            <Trash2 className="h-4 w-4" />
-            Delete
+            Cancel
+          </button>
+        ) : (
+          <button
+            onClick={onReserve}
+            className="rounded-md bg-[#1692EC] px-8 py-2.5 font-medium text-white hover:bg-blue-600"
+          >
+            Reserve
           </button>
         )}
       </div>
