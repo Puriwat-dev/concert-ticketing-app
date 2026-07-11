@@ -25,7 +25,7 @@ export default function RootLayout({
       className={`${roboto.variable} ${roboto.className} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Toaster position="top-center" reverseOrder={false} />
+        <Toaster position="top-right" reverseOrder={false} />
         {children}
       </body>
     </html>

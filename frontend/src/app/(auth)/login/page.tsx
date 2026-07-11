@@ -3,17 +3,15 @@
 import AuthSidebar from '@/components/auth/AuthSidebar'
 import InputField from '@/components/ui/InputField'
 import PasswordField from '@/components/ui/PasswordField'
-import { User } from 'lucide-react'
-import Link from 'next/link'
-
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import toast from 'react-hot-toast'
-
 import { authApi } from '@/lib/api/auth'
 import { LoginFormData, loginSchema } from '@/lib/validations/auth'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { User } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
 
 function LoginForm() {
   const router = useRouter()
