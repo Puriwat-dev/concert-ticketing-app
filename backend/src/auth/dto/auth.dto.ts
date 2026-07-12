@@ -1,12 +1,11 @@
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
-import { UserRole } from 'src/users/entities/user.entity';
+import { UserRole } from '../../users/entities/user.entity';
 
 export class LoginDto {
   @IsEmail({}, { message: 'Please provide a valid email' })
