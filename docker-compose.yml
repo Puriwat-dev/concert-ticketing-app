@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile
     container_name: concert_backend
     ports:
-      - 8080:3000
+      - 3000:3000
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -36,7 +36,9 @@ services:
       dockerfile: Dockerfile
     container_name: concert_frontend
     ports:
-      - 3000:3000
+      - 3001:3001
+    environment:
+      - PORT=3001
     depends_on:
       - backend
 
