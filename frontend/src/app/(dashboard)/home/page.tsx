@@ -24,7 +24,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 
 export default function HomePage() {
-  const { isAdmin } = useRole()
+  const { isAdmin, isRoleLoaded } = useRole()
 
   const [activeTab, setActiveTab] = useState<'overview' | 'create'>('overview')
   const [concerts, setConcerts] = useState<Concert[]>([])
@@ -54,6 +54,8 @@ export default function HomePage() {
   }, [concerts])
 
   const fetchDashboardData = useCallback(async () => {
+    if (!isRoleLoaded) return
+
     setIsLoading(true)
     try {
       const concertsData = await concertsApi.getAll()
@@ -82,7 +84,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [isAdmin])
+  }, [isAdmin, isRoleLoaded])
 
   const handleReserve = async (concertId: string) => {
     try {
@@ -113,47 +115,21 @@ export default function HomePage() {
   }
 
   useEffect(() => {
+    if (!isRoleLoaded) return
+
     let isMounted = true
     const loadData = async () => {
-      await Promise.resolve()
       if (isMounted) {
         fetchDashboardData()
       }
     }
-    loadData()
-    return () => {
-      isMounted = false
-    }
-  }, [fetchDashboardData])
-
-  const fetchConcerts = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const data = await concertsApi.getAll()
-      setConcerts(data)
-    } catch (error: unknown) {
-      if (error instanceof Error) toast.error(error.message)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    let isMounted = true
-
-    const loadData = async () => {
-      await Promise.resolve()
-      if (isMounted) {
-        fetchConcerts()
-      }
-    }
 
     loadData()
 
     return () => {
       isMounted = false
     }
-  }, [fetchConcerts])
+  }, [fetchDashboardData, isRoleLoaded])
 
   const onSubmit = async (data: CreateConcertFormData) => {
     try {
@@ -162,7 +138,7 @@ export default function HomePage() {
 
       reset()
       setActiveTab('overview')
-      fetchConcerts()
+      fetchDashboardData()
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message)
@@ -180,7 +156,7 @@ export default function HomePage() {
       await concertsApi.delete(concertToDelete.id)
       toast.success('Concert deleted successfully')
 
-      fetchConcerts()
+      fetchDashboardData()
       setConcertToDelete(null)
     } catch (error: unknown) {
       if (error instanceof Error) {

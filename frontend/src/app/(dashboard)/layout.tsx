@@ -4,7 +4,7 @@ import LogoutButton from '@/components/ui/LogoutButton'
 import { useRole } from '@/lib/hooks/useRole'
 import { History, Home, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function DashboardLayout({
   children,
@@ -13,6 +13,7 @@ export default function DashboardLayout({
 }) {
   const { isAdmin } = useRole();
   const pathname = usePathname();
+  const router = useRouter();
 
   const getLinkClass = (path: string) => {
     const isActive = pathname === path;
@@ -21,6 +22,14 @@ export default function DashboardLayout({
         ? "bg-[#F0F5F9] font-medium text-black"
         : "text-black hover:bg-gray-50"
     }`;
+  };
+
+  const switchTargetRole = isAdmin ? "USER" : "ADMIN";
+  const switchTargetText = isAdmin ? "Switch to user" : "Switch to admin";
+
+  const handleSwitchRole = () => {
+    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+    router.push(`/login?role=${switchTargetRole}`);
   };
   
   return (
@@ -48,13 +57,13 @@ export default function DashboardLayout({
             History
           </Link>
 
-          <Link
-            href="/login?role=user"
+          <button
+            onClick={handleSwitchRole}
             className="flex items-center gap-3 rounded-md px-4 py-3 hover:bg-gray-50"
           >
             <RefreshCcw className="h-5 w-5" />
-            Switch to user
-          </Link>
+            {switchTargetText}
+          </button>
         </nav>
 
         {/* Logout at the bottom */}

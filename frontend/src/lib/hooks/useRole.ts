@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 export function useRole() {
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -32,10 +33,11 @@ export function useRole() {
           console.error('Failed to parse token payload')
         }
       }
+      setIsRoleLoaded(true);
     }
 
     checkRole()
   }, [])
 
-  return { isAdmin }
+  return { isAdmin, isRoleLoaded }
 }

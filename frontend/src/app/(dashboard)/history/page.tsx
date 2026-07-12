@@ -1,70 +1,72 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
-import toast from "react-hot-toast";
+import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
-import { useRole } from "@/lib/hooks/useRole";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
+import { Reservation, reservationsApi } from '@/lib/api/reservations'
+import { useRole } from '@/lib/hooks/useRole'
 
 export default function HistoryPage() {
-  const { isAdmin } = useRole();
-  const [history, setHistory] = useState<Reservation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAdmin, isRoleLoaded } = useRole()
+  const [history, setHistory] = useState<Reservation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    let isMounted = true;
+    if (!isRoleLoaded) return
+
+    let isMounted = true
 
     const fetchHistory = async () => {
-      await Promise.resolve();
+      await Promise.resolve()
 
       try {
-        setIsLoading(true);
-        
+        setIsLoading(true)
+
         const data = isAdmin
           ? await reservationsApi.getAllReservations()
-          : await reservationsApi.getUserHistory();
+          : await reservationsApi.getUserHistory()
 
         if (isMounted) {
-          setHistory(data);
+          setHistory(data)
         }
       } catch (error: unknown) {
         if (isMounted) {
           if (error instanceof Error) {
-            if (!error.message.includes("403")) {
-              toast.error(error.message);
+            if (!error.message.includes('403')) {
+              toast.error(error.message)
             }
           } else {
-            toast.error("Failed to load history.");
+            toast.error('Failed to load history.')
           }
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setIsLoading(false)
         }
       }
-    };
+    }
 
-    fetchHistory();
+    fetchHistory()
 
     return () => {
-      isMounted = false;
-    };
-  }, [isAdmin]);
+      isMounted = false
+    }
+  }, [isAdmin, isRoleLoaded])
 
   const formatDateTime = (isoString: string) => {
-    const date = new Date(isoString);
-    const pad = (num: number) => num.toString().padStart(2, "0");
+    const date = new Date(isoString)
+    const pad = (num: number) => num.toString().padStart(2, '0')
 
-    const day = pad(date.getDate());
-    const month = pad(date.getMonth() + 1);
-    const year = date.getFullYear();
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
-    const seconds = pad(date.getSeconds());
+    const day = pad(date.getDate())
+    const month = pad(date.getMonth() + 1)
+    const year = date.getFullYear()
+    const hours = pad(date.getHours())
+    const minutes = pad(date.getMinutes())
+    const seconds = pad(date.getSeconds())
 
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-  };
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+  }
 
   return (
     <div className="rounded-md bg-white">
@@ -86,9 +88,7 @@ export default function HistoryPage() {
                 <th className="border border-gray-300 p-4 font-bold">
                   Concert name
                 </th>
-                <th className="border border-gray-300 p-4 font-bold">
-                  Action
-                </th>
+                <th className="border border-gray-300 p-4 font-bold">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -108,10 +108,10 @@ export default function HistoryPage() {
                       {formatDateTime(record.updatedAt)}
                     </td>
                     <td className="border border-gray-300 p-4">
-                      {record.user?.fullName || "Unknown User"}
+                      {record.user?.fullName || 'Unknown User'}
                     </td>
                     <td className="border border-gray-300 p-4">
-                      {record.concert?.name || "Unknown Concert"}
+                      {record.concert?.name || 'Unknown Concert'}
                     </td>
                     <td className="border border-gray-300 p-4 capitalize">
                       {record.action.toLowerCase()}
@@ -124,5 +124,5 @@ export default function HistoryPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
