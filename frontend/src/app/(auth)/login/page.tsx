@@ -18,7 +18,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const role = searchParams.get("role") || "user";
+  const role = searchParams.get("role") || "USER";
   const isAdmin = role === 'ADMIN'
   const roleText = isAdmin ? 'Administrator' : 'User'
 

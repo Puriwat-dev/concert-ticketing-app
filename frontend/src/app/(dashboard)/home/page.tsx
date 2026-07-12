@@ -90,7 +90,11 @@ export default function HomePage() {
       toast.success('Successfully reserved!')
       fetchDashboardData()
     } catch (error: unknown) {
-      toast.error('Failed to reserve concert.')
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to reserve concert.')
+      }
     }
   }
 
@@ -100,7 +104,11 @@ export default function HomePage() {
       toast.success('Reservation cancelled.')
       fetchDashboardData()
     } catch (error: unknown) {
-      toast.error('Failed to cancel reservation.')
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error('Failed to reserve concert.')
+      }
     }
   }
 
@@ -251,10 +259,12 @@ export default function HomePage() {
             </div>
           ) : (
             concerts.map((concert) => {
-              const latestRecord = [...userReservations]
-                .find((r) => r.concert?.id === concert.id);
+              const latestRecord = [...userReservations].find(
+                (r) => r.concert?.id === concert.id,
+              )
 
-              const isCurrentlyReserved = latestRecord?.action.toUpperCase() === 'RESERVE';
+              const isCurrentlyReserved =
+                latestRecord?.action.toUpperCase() === 'RESERVE'
 
               return (
                 <ConcertCard
